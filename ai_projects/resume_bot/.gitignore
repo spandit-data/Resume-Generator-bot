@@ -1,0 +1,11 @@
+
+# Environment variables (contains API keys)
+.env
+
+# Data directory - contains SQLite database with user data
+data/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
