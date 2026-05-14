@@ -3,9 +3,7 @@
 import asyncio
 import logging
 import os
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from socketserver import ThreadingMixIn
+from aiohttp import web
 
 from dotenv import load_dotenv
 from telegram import Update
@@ -303,39 +301,27 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(f"Exception while handling an update: {context.error}")
 
 
-class HealthCheckHandler(BaseHTTPRequestHandler):
-    """Handler that responds with 200 OK to any GET request."""
-
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"OK")
-
-    def log_message(self, format, *args):
-        """Suppress access logs from health check server."""
-        pass
+async def health_handler(request):
+    """Health check endpoint that returns 200 OK."""
+    return web.Response(text="ok")
 
 
-class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-    """Threaded HTTP server for handling concurrent health checks."""
-    daemon_threads = True
-
-
-def start_health_server():
-    """Start lightweight HTTP health check server in background thread."""
-    port = int(os.getenv("PORT", 8000))
-    server = ThreadedHTTPServer(("0.0.0.0", port), HealthCheckHandler)
-    server.daemon_threads = True
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
+async def start_web_server():
+    """Start aiohttp web server for health checks."""
+    app = web.Application()
+    app.router.add_get("/health", health_handler)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.getenv("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
     logger.info(f"Health check server running on port {port}")
 
 
-def main():
-    """Start the bot."""
+async def main():
+    """Start the bot and health check server."""
     # Start health check server for Render/Railway deployment
-    start_health_server()
+    await start_web_server()
 
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
@@ -353,8 +339,8 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("Resume bot starting...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    await app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

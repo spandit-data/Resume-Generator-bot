@@ -25,7 +25,7 @@ RUN mkdir -p /app/data
 ENV PYTHONUNBUFFERED=1
 
 # Expose health check port
-EXPOSE 8000
+EXPOSE 8080
 
 # Start the bot
 CMD ["uv", "run", "src/bot.py"]
