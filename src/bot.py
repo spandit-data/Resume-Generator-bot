@@ -3,6 +3,9 @@
 import asyncio
 import logging
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 
 from dotenv import load_dotenv
 from telegram import Update
@@ -300,8 +303,40 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(f"Exception while handling an update: {context.error}")
 
 
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    """Handler that responds with 200 OK to any GET request."""
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+    def log_message(self, format, *args):
+        """Suppress access logs from health check server."""
+        pass
+
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Threaded HTTP server for handling concurrent health checks."""
+    daemon_threads = True
+
+
+def start_health_server():
+    """Start lightweight HTTP health check server in background thread."""
+    port = int(os.getenv("PORT", 8000))
+    server = ThreadedHTTPServer(("0.0.0.0", port), HealthCheckHandler)
+    server.daemon_threads = True
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    logger.info(f"Health check server running on port {port}")
+
+
 def main():
     """Start the bot."""
+    # Start health check server for Render/Railway deployment
+    start_health_server()
+
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
     # Add error handler
