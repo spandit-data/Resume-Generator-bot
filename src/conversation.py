@@ -23,7 +23,7 @@ EXPERIENCED_QUESTIONS: list[str] = [
     "Aapka mobile number kya hai?",
 ]
 
-# Questions for fresher users (skip work experience questions)
+# Questions for fresher users (skip work experience questions, add hobbies)
 FRESHER_QUESTIONS: list[str] = [
     "Namaste! Main aapka resume banane mein madad karunga. Sabse pehle aapka poora naam kya hai?",
     "Aapki umar kitni hai?",
@@ -33,6 +33,7 @@ FRESHER_QUESTIONS: list[str] = [
     "Aapki padhai kitni hui hai? (Jaise 10th pass, 12th pass, ITI)",
     "Aapne yeh padhai kab poori ki? Matlb kaunse saal mein pass hua? (Jaise 2018, 2020 — agar yaad nahi toh 'pata nahi' bolein)",
     "Aapka mobile number kya hai?",
+    "Aapke kya hobbies hain? Jaise cricket khelna, music sunna, cooking, etc.?",
 ]
 
 # Questions asked before selecting fresher/experienced

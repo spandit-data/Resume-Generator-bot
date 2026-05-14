@@ -10,7 +10,7 @@ from docx import Document
 
 logger = logging.getLogger(__name__)
 
-EXPERIENCED_TEMPLATE = Path(__file__).parent / "template" / "resume_template_experience.docx"
+EXPERIENCED_TEMPLATE = Path(__file__).parent / "template" / "resume_template_experienced.docx"
 FRESHER_TEMPLATE = Path(__file__).parent / "template" / "resume_template_fresher.docx"
 
 FRESHER_KEYWORDS = ["nahi", "nhi", "no", "none", "fresher", "koi nahi", ""]
@@ -53,15 +53,17 @@ def generate_docx(user_id: int, data: dict) -> str:
     replace_in_doc(doc, "{{EDUCATION}}", data.get("education", ""))
     replace_in_doc(doc, "{{EDUCATION_YEAR}}", data.get("education_year", ""))
 
-    # Objective line
-    job_target = data.get("job_target", "")
-    objective = data.get("objective", "")
-    if not objective and job_target:
-        if is_fresher:
-            objective = f"Motivated fresher seeking a {job_target} position to learn and contribute effectively."
-        else:
-            objective = f"Seeking a {job_target} position where I can contribute my skills and experience effectively."
-    replace_in_doc(doc, "{{OBJECTIVE_LINE}}", objective)
+    # 4-line Objective
+    replace_in_doc(doc, "{{OBJECTIVE_LINE_1}}", data.get("objective_line_1", ""))
+    replace_in_doc(doc, "{{OBJECTIVE_LINE_2}}", data.get("objective_line_2", ""))
+    replace_in_doc(doc, "{{OBJECTIVE_LINE_3}}", data.get("objective_line_3", ""))
+    replace_in_doc(doc, "{{OBJECTIVE_LINE_4}}", data.get("objective_line_4", ""))
+
+    # Fresher-specific: hobbies and career goal
+    if is_fresher:
+        replace_in_doc(doc, "{{HOBBY_1}}", data.get("hobby_1", "").title())
+        replace_in_doc(doc, "{{HOBBY_2}}", data.get("hobby_2", "").title())
+        replace_in_doc(doc, "{{CAREER_GOAL_LINE}}", data.get("career_goal_line", ""))
 
     # Skills
     skills = data.get("skills", [])

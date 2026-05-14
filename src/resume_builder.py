@@ -91,14 +91,21 @@ JSON format:
   "education": "",
   "education_year": "",
   "phone": "",
-  "objective": "",
+  "objective_line_1": "",
+  "objective_line_2": "",
+  "objective_line_3": "",
+  "objective_line_4": "",
   "work_bullets": ["bullet 1", "bullet 2", "bullet 3", "bullet 4"],
   "skills": ["skill 1", "skill 2", "skill 3"]
 }
 
 If a field is not mentioned or unclear, use empty string.
 
-For objective: Generate a single line like "Seeking a {job_target} position where I can contribute my skills and experience effectively."
+For the 4-line objective: Generate exactly 4 lines (each line max 15 words) based on job_target and experience_duration. Example for Delivery Executive with 2 years experience:
+- Line 1: "To obtain a Delivery Executive position where I can utilize my 2 years of delivery experience."
+- Line 2: "I am a dedicated and hardworking professional committed to timely and accurate deliveries."
+- Line 3: "I aim to contribute positively to the company's operations through reliable field performance."
+- Line 4: "Seeking a long-term opportunity to grow within a reputed logistics or delivery organization."
 
 For work_bullets: Generate EXACTLY 4 professional bullet points (1 line each) describing work done.
 
@@ -124,7 +131,13 @@ JSON format:
   "education": "",
   "education_year": "",
   "phone": "",
-  "objective": "",
+  "hobby_1": "",
+  "hobby_2": "",
+  "objective_line_1": "",
+  "objective_line_2": "",
+  "objective_line_3": "",
+  "objective_line_4": "",
+  "career_goal_line": "",
   "work_bullets": ["bullet 1", "bullet 2", "bullet 3", "bullet 4"],
   "skills": ["skill 1", "skill 2", "skill 3"]
 }
@@ -133,7 +146,15 @@ NOTE: For fresher, do NOT include previous_company, previous_role, or experience
 
 If a field is not mentioned or unclear, use empty string.
 
-For objective: Generate a single line like "Motivated fresher seeking a {job_target} position to learn and contribute effectively."
+For hobbies: Extract the hobbies mentioned by the user. Split into two separate hobbies (hobby_1, hobby_2). If only one hobby mentioned, use it for hobby_1 and leave hobby_2 empty.
+
+For the 4-line objective: Generate exactly 4 lines (each line max 15 words) based on job_target. Example for Delivery Executive:
+- Line 1: "To obtain a Delivery Executive position where I can utilize my skills and learn professional delivery operations."
+- Line 2: "I am a motivated and hardworking individual eager to contribute to a reliable delivery team."
+- Line 3: "I aim to develop practical skills and grow within a reputed organization."
+- Line 4: "Seeking an entry-level opportunity to build a successful career in logistics or delivery."
+
+For career_goal_line: Generate ONE line (max 10 words) describing the user's career goal based on job_target. Example: "To become a senior delivery manager in 5 years" or "To build expertise in logistics and operations"
 
 For work_bullets: Generate EXACTLY 4 professional bullet points highlighting eagerness to learn, any internships, projects, volunteer work, or relevant skills. Focus on potential and willingness to work hard.
 
@@ -157,6 +178,7 @@ def format_answers_for_prompt(answers: dict[int, str], is_fresher: bool) -> str:
             "Education",
             "Education Year",
             "Phone",
+            "Hobbies",
         ]
     else:
         questions = [
