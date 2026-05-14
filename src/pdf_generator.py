@@ -59,6 +59,20 @@ def generate_docx(user_id: int, data: dict) -> str:
     replace_in_doc(doc, "{{OBJECTIVE_LINE_3}}", data.get("objective_line_3", ""))
     replace_in_doc(doc, "{{OBJECTIVE_LINE_4}}", data.get("objective_line_4", ""))
 
+    # Fallback for old single-line objective (backward compatibility)
+    old_objective = data.get("objective", "")
+    if old_objective:
+        replace_in_doc(doc, "{{OBJECTIVE_LINE}}", old_objective)
+    else:
+        # Combine 4 lines for fallback
+        combined = " ".join([
+            data.get("objective_line_1", ""),
+            data.get("objective_line_2", ""),
+            data.get("objective_line_3", ""),
+            data.get("objective_line_4", ""),
+        ]).strip()
+        replace_in_doc(doc, "{{OBJECTIVE_LINE}}", combined)
+
     # Fresher-specific: hobbies and career goal
     if is_fresher:
         replace_in_doc(doc, "{{HOBBY_1}}", data.get("hobby_1", "").title())
