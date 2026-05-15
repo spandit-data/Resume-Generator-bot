@@ -73,9 +73,9 @@ SQLite stored at `data/resumes.db`. Tables: resumes (user_id, name, city, job_ta
 
 ## Deployment
 
-### Render (Recommended - Free Tier)
+### Railway (Recommended - Free Tier)
 1. Push code to GitHub
-2. Create Web Service on [render.com](https://render.com)
+2. Create Web Service on [railway.app](https://railway.app)
 3. Settings:
    - Build Command: `pip install uv && uv sync`
    - Start Command: `uv run src/bot.py`
@@ -95,4 +95,4 @@ docker run -e TELEGRAM_BOT_TOKEN=xxx -e GROQ_API_KEY=xxx resume-bot
 
 1. Make changes locally
 2. Push to GitHub
-3. Render auto-deploys on push
+3. Railway auto-deploys on push
