@@ -303,10 +303,10 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 async def main():
     """Start the Telegram bot."""
     app = Application.builder().token(TELEGRAM_TOKEN).build()
-    
+
     # Add error handler
     app.add_error_handler(error_handler)
-    
+
     # Add handlers
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("cancel", cancel_command))
@@ -316,10 +316,24 @@ async def main():
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.VOICE, handle_message))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    
+
     logger.info("Resume bot starting...")
-    await app.run_polling(allowed_updates=Update.ALL_TYPES)
+    # Use initialize() + start() + idle() instead of run_polling()
+    # to avoid event loop lifecycle conflicts with ptb 22.x
+    await app.initialize()
+    await app.start()
+    logger.info("Bot initialized and running...")
+    while True:
+        await asyncio.sleep(3600)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.run_until_complete(asyncio.sleep(0.5))  # allow graceful shutdown
+        loop.close()
