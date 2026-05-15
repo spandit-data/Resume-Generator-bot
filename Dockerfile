@@ -24,8 +24,8 @@ RUN mkdir -p /app/data
 # Environment variables
 ENV PYTHONUNBUFFERED=1
 
-# Expose health check port
-EXPOSE 8080
+# Install dependencies and pin the version
+RUN pip install uv && uv sync && uv pip install python-telegram-bot==22.7
 
-# Start the bot
-CMD ["uv", "run", "src/bot.py"]
+# Start with plain python (not uv run) to avoid patched event loop
+CMD ["python", "src/bot.py"]

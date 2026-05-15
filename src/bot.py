@@ -339,14 +339,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    import signal
-    loop = asyncio.get_event_loop()
-
-    def shutdown():
-        loop.create_task(asyncio.sleep(0))  # trigger stop
-    loop.add_signal_handler(signal.SIGTERM, shutdown)
-
-    try:
-        loop.run_until_complete(main())
-    except (KeyboardInterrupt, SystemExit):
-        pass
+    asyncio.run(main())
