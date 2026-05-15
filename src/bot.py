@@ -3,11 +3,13 @@
 import asyncio
 import logging
 import os
+import signal
 
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (
     Application,
+    ApplicationBuilder,
     CommandHandler,
     ContextTypes,
     MessageHandler,
@@ -319,12 +321,18 @@ async def start_web_server():
 
 async def main():
     """Start the Telegram bot."""
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    # Use ApplicationBuilder pattern (ptb 22.x recommended way)
+    app = (
+        ApplicationBuilder()
+        .token(TELEGRAM_TOKEN)
+        .read_timeout(30)
+        .build()
+    )
 
-    # Add error handler
+    # Add error handler FIRST
     app.add_error_handler(error_handler)
 
-    # Add handlers
+    # Add handlers BEFORE initialize/start
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("cancel", cancel_command))
     app.add_handler(CommandHandler("history", history_command))
@@ -336,15 +344,37 @@ async def main():
 
     logger.info("Resume bot starting...")
 
-    # Use initialize() + start() pattern — compatible with existing loop
+    # Build the application and start polling
     await app.initialize()
     await app.start()
 
-    # Keep bot running until SIGINT/SIGTERM (idle removed in ptb 22.7+)
-    await asyncio.Event().wait()
+    # Start the updater's polling loop — this is the key fix!
+    if app.updater is not None:
+        await app.updater.start_polling()
 
+    # Keep bot running with proper signal handling
+    stop_event = asyncio.Event()
+
+    def signal_handler():
+        logger.info("Received shutdown signal")
+        stop_event.set()
+
+    # Register signal handlers
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            loop.add_signal_handler(sig, signal_handler)
+        except NotImplementedError:
+            # Windows doesn't support add_signal_handler
+            pass
+
+    # Wait for shutdown signal
+    await stop_event.wait()
+
+    logger.info("Shutting down bot...")
     # Graceful shutdown
     await app.stop()
+    await app.shutdown()
 
 
 if __name__ == "__main__":
