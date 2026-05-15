@@ -1,21 +1,21 @@
-"""Google Gemini integration for structuring resume data."""
+"""Groq API integration for structuring resume data."""
 
 import json
 import logging
 import os
 import re
 
-from google import genai
+from groq import Groq
 
 logger = logging.getLogger(__name__)
 
 
-def get_gemini_client():
-    """Get Gemini client with API key from environment."""
-    api_key = os.environ.get("GEMINI_API_KEY")
+def get_groq_client():
+    """Get Groq client with API key from environment."""
+    api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        raise ValueError("GEMINI_API_KEY not set in environment")
-    return genai.Client(api_key=api_key)
+        raise ValueError("GROQ_API_KEY not set in environment")
+    return Groq(api_key=api_key)
 
 
 DONT_KNOW_PATTERNS = [
@@ -167,7 +167,7 @@ For job_target, normalize to one of: Delivery Executive, Field Sales Executive, 
 
 
 def format_answers_for_prompt(answers: dict[int, str], is_fresher: bool) -> str:
-    """Format collected answers into a numbered list for Gemini."""
+    """Format collected answers into a numbered list for AI processing."""
     if is_fresher:
         questions = [
             "Name",
@@ -203,8 +203,8 @@ def format_answers_for_prompt(answers: dict[int, str], is_fresher: bool) -> str:
 
 
 def structure_resume_data(answers: dict[int, str], is_fresher: bool = False) -> dict:
-    """Send answers to Gemini and get structured JSON resume data."""
-    client = get_gemini_client()
+    """Send answers to Groq and get structured JSON resume data."""
+    client = get_groq_client()
     formatted_answers = format_answers_for_prompt(answers, is_fresher)
 
     system_prompt = FRESHER_SYSTEM_PROMPT if is_fresher else EXPERIENCED_SYSTEM_PROMPT
@@ -214,11 +214,12 @@ def structure_resume_data(answers: dict[int, str], is_fresher: bool = False) -> 
 Extract resume data from these answers:
 {formatted_answers}"""
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
+    chat_completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3
     )
-    response_text = response.text.strip()
+    response_text = chat_completion.choices[0].message.content.strip()
 
     try:
         if response_text.startswith("```"):
@@ -233,7 +234,7 @@ Extract resume data from these answers:
             data["education"] = format_education(data["education"])
 
         # Check if education_year should be empty (user said don't know)
-        # For fresher: answer index 6 corresponds to education year (0=name,1=age,2=city,3=job,4=vehicle,5=education,6=year,7=phone)
+        # For fresher: answer index 6 corresponds to education year (0=name,1=age,2=city,3=job,4=vehicle,5=education,6=year,7=phone,8=hobbies)
         # For experienced: answer index 8 corresponds to education year
         education_year_index = 6 if is_fresher else 8
         if is_dont_know(answers.get(education_year_index, "")):
@@ -242,5 +243,5 @@ Extract resume data from these answers:
         return data
 
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse Gemini response: {e}\nResponse: {response_text}")
+        logger.error(f"Failed to parse Groq response: {e}\nResponse: {response_text}")
         raise

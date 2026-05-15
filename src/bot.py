@@ -50,7 +50,6 @@ logger = logging.getLogger(__name__)
 # Get API keys
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 TEST_USER_ID = 8393898515  # Your test Telegram ID
 
 if not TELEGRAM_TOKEN:
@@ -59,8 +58,6 @@ if not TELEGRAM_TOKEN:
 # Set API keys for other modules
 if GROQ_API_KEY:
     os.environ["GROQ_API_KEY"] = GROQ_API_KEY
-if GEMINI_API_KEY:
-    os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 
 
 async def generate_resume(update: Update, context: ContextTypes.DEFAULT_TYPE, answers: dict, is_fresher: bool) -> None:
