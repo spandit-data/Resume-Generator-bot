@@ -321,8 +321,9 @@ async def start_web_server():
 async def main():
     """Start the bot and health check server."""
     # Start health check server in the same event loop (before polling)
-    runner = web.AppRunner(web.Application())
-    runner.router.add_get("/health", health_handler)
+    health_app = web.Application()
+    health_app.router.add_get("/health", health_handler)
+    runner = web.AppRunner(health_app)
     await runner.setup()
     port = int(os.getenv("PORT", 8080))
     site = web.TCPSite(runner, "0.0.0.0", port)
