@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import os
-from aiohttp import web
 
 from dotenv import load_dotenv
 from telegram import Update
@@ -319,10 +318,7 @@ async def start_web_server():
 
 
 async def main():
-    """Start the bot and health check server."""
-    # Start health check server for Render/Railway deployment
-    await start_web_server()
-
+    """Start the Telegram bot."""
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
     # Add error handler
@@ -343,4 +339,14 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import signal
+    loop = asyncio.get_event_loop()
+
+    def shutdown():
+        loop.create_task(asyncio.sleep(0))  # trigger stop
+    loop.add_signal_handler(signal.SIGTERM, shutdown)
+
+    try:
+        loop.run_until_complete(main())
+    except (KeyboardInterrupt, SystemExit):
+        pass

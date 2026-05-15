@@ -4,14 +4,13 @@ version = "0.1.0"
 description = "Telegram bot for blue collar workers to create resumes via Hindi voice conversations"
 requires-python = ">=3.10"
 dependencies = [
-    "python-telegram-bot==20.7",
+    "python-telegram-bot>=22.0",
     "openai>=1.0.0",
     "google-genai>=0.8.0",
     "reportlab>=4.0.0",
     "python-docx>=1.0.0",
     "pydub>=0.25.1",
     "python-dotenv>=1.0.0",
-    "aiohttp>=3.9.0",
 ]
 
 [project.scripts]
