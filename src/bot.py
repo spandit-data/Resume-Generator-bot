@@ -340,8 +340,8 @@ async def main():
     await app.initialize()
     await app.start()
 
-    # Run idle on the existing loop (no new loop created)
-    await app.idle()
+    # Keep bot running until SIGINT/SIGTERM (idle removed in ptb 22.7+)
+    await asyncio.Event().wait()
 
     # Graceful shutdown
     await app.stop()
