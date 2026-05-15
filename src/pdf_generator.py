@@ -75,8 +75,10 @@ def generate_docx(user_id: int, data: dict) -> str:
 
     # Fresher-specific: hobbies and career goal
     if is_fresher:
-        replace_in_doc(doc, "{{HOBBY_1}}", data.get("hobby_1", "").title())
-        replace_in_doc(doc, "{{HOBBY_2}}", data.get("hobby_2", "").title())
+        hobby_1 = data.get("hobby_1", "").title() if data.get("hobby_1") else "NA"
+        hobby_2 = data.get("hobby_2", "").title() if data.get("hobby_2") else "NA"
+        replace_in_doc(doc, "{{HOBBY_1}}", hobby_1)
+        replace_in_doc(doc, "{{HOBBY_2}}", hobby_2)
         replace_in_doc(doc, "{{CAREER_GOAL_LINE}}", data.get("career_goal_line", ""))
 
     # Skills

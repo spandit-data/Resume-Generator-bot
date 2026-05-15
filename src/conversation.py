@@ -33,7 +33,7 @@ FRESHER_QUESTIONS: list[str] = [
     "Aapki padhai kitni hui hai? (Jaise 10th pass, 12th pass, ITI)",
     "Aapne yeh padhai kab poori ki? Matlb kaunse saal mein pass hua? (Jaise 2018, 2020 — agar yaad nahi toh 'pata nahi' bolein)",
     "Aapka mobile number kya hai?",
-    "Aapke kya hobbies hain? Jaise cricket khelna, music sunna, cooking, etc.?",
+    "Aapke 2 hobbies kya hain? Jaise cricket khelna, music sunna, cooking, etc.? (Dono hobbies batayein)",
 ]
 
 # Questions asked before selecting fresher/experienced
