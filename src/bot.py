@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import os
+from aiohttp import web
 
 from dotenv import load_dotenv
 from telegram import Update
@@ -300,25 +301,27 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(f"Exception while handling an update: {context.error}")
 
 
+async def health_handler(request):
+    """Health check endpoint that returns 200 OK."""
+    return web.Response(text="ok")
+
+
+async def start_web_server():
+    """Start aiohttp web server for health checks."""
+    app = web.Application()
+    app.router.add_get("/health", health_handler)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.getenv("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    logger.info(f"Health check server running on port {port}")
+
+
 async def main():
-    """Start the Telegram bot."""
-    # Start a tiny health server in a thread so Render can ping a port
-    import threading
-    from http.server import HTTPServer, BaseHTTPRequestHandler
-
-    class HealthHandler(BaseHTTPRequestHandler):
-        def do_GET(self):
-            self.send_response(200)
-            self.end_headers()
-            self.wfile.write(b"ok")
-        def log_message(self, *args): pass  # suppress logs
-
-    def run_health():
-        srv = HTTPServer(("0.0.0.0", int(os.getenv("PORT", 8080))), HealthHandler)
-        srv.serve_forever()
-
-    health_thread = threading.Thread(target=run_health, daemon=True)
-    health_thread.start()
+    """Start the bot and health check server."""
+    # Start health check server for Render/Railway deployment
+    await start_web_server()
 
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
@@ -336,22 +339,8 @@ async def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("Resume bot starting...")
-    # Use initialize() + start() + idle() instead of run_polling()
-    # to avoid event loop lifecycle conflicts with ptb 22.x
-    await app.initialize()
-    await app.start()
-    logger.info("Bot initialized and running...")
-    while True:
-        await asyncio.sleep(3600)
+    await app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        pass
-    finally:
-        loop.run_until_complete(asyncio.sleep(0.5))  # allow graceful shutdown
-        loop.close()
+    asyncio.run(main())
