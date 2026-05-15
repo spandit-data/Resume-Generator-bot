@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import os
-import threading
 from aiohttp import web
 
 from dotenv import load_dotenv
@@ -321,19 +320,15 @@ async def start_web_server():
 
 async def main():
     """Start the bot and health check server."""
-    # Start health check server in a separate thread to avoid event loop conflict
-    def run_health_server():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(start_web_server())
-        loop.run_forever()  # Keep the loop running
-    
-    health_thread = threading.Thread(target=run_health_server, daemon=True)
-    health_thread.start()
-    
-    # Give health server time to start
-    await asyncio.sleep(1)
-    
+    # Start health check server in the same event loop (before polling)
+    runner = web.AppRunner(web.Application())
+    runner.router.add_get("/health", health_handler)
+    await runner.setup()
+    port = int(os.getenv("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    logger.info(f"Health check server running on port {port}")
+
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
     # Add error handler
