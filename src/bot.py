@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import os
+import threading
 from aiohttp import web
 
 from dotenv import load_dotenv
@@ -320,14 +321,24 @@ async def start_web_server():
 
 async def main():
     """Start the bot and health check server."""
-    # Start health check server for Render/Railway deployment
-    await start_web_server()
-
+    # Start health check server in a separate thread to avoid event loop conflict
+    def run_health_server():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(start_web_server())
+        loop.run_forever()  # Keep the loop running
+    
+    health_thread = threading.Thread(target=run_health_server, daemon=True)
+    health_thread.start()
+    
+    # Give health server time to start
+    await asyncio.sleep(1)
+    
     app = Application.builder().token(TELEGRAM_TOKEN).build()
-
+    
     # Add error handler
     app.add_error_handler(error_handler)
-
+    
     # Add handlers
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("cancel", cancel_command))
@@ -337,7 +348,7 @@ async def main():
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.VOICE, handle_message))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
+    
     logger.info("Resume bot starting...")
     await app.run_polling(allowed_updates=Update.ALL_TYPES)
 
