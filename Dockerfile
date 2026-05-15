@@ -28,4 +28,4 @@ ENV PYTHONUNBUFFERED=1
 RUN pip install uv && uv sync && uv pip install python-telegram-bot==22.7
 
 # Start with plain python (not uv run) to avoid patched event loop
-CMD ["python", "src/bot.py"]
+CMD ["/app/.venv/bin/python", "src/bot.py"]
