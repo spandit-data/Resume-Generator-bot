@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import os
-from aiohttp import web
 
 from dotenv import load_dotenv
 from telegram import Update
@@ -301,35 +300,8 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(f"Exception while handling an update: {context.error}")
 
 
-async def health_handler(request):
-    """Health check endpoint that returns 200 OK."""
-    return web.Response(text="ok")
-
-
-async def start_web_server():
-    """Start aiohttp web server for health checks."""
-    app = web.Application()
-    app.router.add_get("/health", health_handler)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    port = int(os.getenv("PORT", 8080))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-    logger.info(f"Health check server running on port {port}")
-
-
 async def main():
-    """Start the bot and health check server."""
-    # Start health check server in the same event loop (before polling)
-    health_app = web.Application()
-    health_app.router.add_get("/health", health_handler)
-    runner = web.AppRunner(health_app)
-    await runner.setup()
-    port = int(os.getenv("PORT", 8080))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-    logger.info(f"Health check server running on port {port}")
-
+    """Start the Telegram bot."""
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
     # Add error handler
