@@ -302,6 +302,24 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def main():
     """Start the Telegram bot."""
+    # Start a tiny health server in a thread so Render can ping a port
+    import threading
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+
+    class HealthHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"ok")
+        def log_message(self, *args): pass  # suppress logs
+
+    def run_health():
+        srv = HTTPServer(("0.0.0.0", int(os.getenv("PORT", 8080))), HealthHandler)
+        srv.serve_forever()
+
+    health_thread = threading.Thread(target=run_health, daemon=True)
+    health_thread.start()
+
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
     # Add error handler
