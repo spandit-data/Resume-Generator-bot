@@ -335,7 +335,16 @@ async def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("Resume bot starting...")
-    await app.run_polling(allowed_updates=Update.ALL_TYPES)
+
+    # Use initialize() + start() pattern — compatible with existing loop
+    await app.initialize()
+    await app.start()
+
+    # Run idle on the existing loop (no new loop created)
+    await app.idle()
+
+    # Graceful shutdown
+    await app.stop()
 
 
 if __name__ == "__main__":
